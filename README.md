@@ -11,8 +11,10 @@ Meanwhile, we provide the pre-trained weights for the TriNet model, as well as s
 
 This is a first, simple release. A better more generic script will follow in a few months, but this should be enough to get started trying out our models!
 
-As a first step, download the weights for the TriNet model [trained on MARS](https://omnomnom.vision.rwth-aachen.de/data/trinet-mars.npz) or trained on [Market1501](https://omnomnom.vision.rwth-aachen.de/data/trinet-market1501.npz).
-(Pre-trained LuNet models will follow.)
+As a first step, download either of these pre-trained models:
+- [TriNet trained on MARS](https://omnomnom.vision.rwth-aachen.de/data/trinet-mars.npz) (md5sum: `72fafa2ee9aa3765f038d06e8dd8ef4b`)
+- [TriNet trained on Market1501](https://omnomnom.vision.rwth-aachen.de/data/trinet-market1501.npz) (md5sum: `5353f95d1489536129ec14638aded3c7`)
+- (LuNet models will follow.)
 
 Next, create a file (`files.txt`) which contains the full path to the image files you want to embed, one filename per line, like so:
 
