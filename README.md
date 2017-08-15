@@ -45,5 +45,5 @@ python trinet_embed.py files.txt /path/to/trinet-market1501.npz >embeddings.csv
 You can now do meaningful work by comparing these embeddings using the Euclidean distance, for example, try some K-means clustering!
 
 A couple notes:
-- The script depends on both [Theano](http://deeplearning.net/software/theano/install.html) and [Lasagne](http://lasagne.readthedocs.io/en/latest/user/installation.html) being correctly installed.
+- The script depends on [Theano](http://deeplearning.net/software/theano/install.html), [Lasagne](http://lasagne.readthedocs.io/en/latest/user/installation.html) and [OpenCV Python](http://opencv.org/) (`pip install opencv-python`) being correctly installed.
 - The input files should be crops of a full person standing upright, and they will be resized to `288x144` before being passed to the network.
