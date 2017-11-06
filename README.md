@@ -9,6 +9,7 @@ We provide the following things:
   See section [Training your own models](#training-your-own-models).
 - A script for evaluation which computes the CMC and mAP of embeddings in an HDF5 ("new .mat") file.
   See section [Evaluating embeddings](#evaluating-embeddings).
+- A list of [independent re-implementations](#independent-re-implementations).
 
 If you use any of the provided code, please cite:
 ```
@@ -173,3 +174,11 @@ TODO: Will be added later.
 # Evaluating embeddings
 
 TODO: Will be added later.
+
+
+# Independent re-implementations
+
+These are the independent re-implementations of our paper that we are aware of,
+please send a pull-request to add more:
+
+- [Open-ReID](https://github.com/Cysu/open-reid) (PyTorch, MIT license)
