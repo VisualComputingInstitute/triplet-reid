@@ -76,6 +76,8 @@ achieving about the same performance.
 - **This repository requires at least version 1.4 of TensorFlow.**
 - **The TensorFlow code is Python 3 only and won't work in Python 2!**
 
+:boom: :fire: :exclamation: **If you train on a very different dataset, don't forget to tune the learning-rate** :exclamation: :fire: :boom:
+
 ## Defining a dataset
 
 A dataset consists of two things:
