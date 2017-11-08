@@ -103,9 +103,10 @@ def load_dataset(csv_file, image_root, fail_on_missing=True):
         csv_file (string, file-like object): The csv data file to load.
         image_root (string): The path to which the image files as stored in the
             csv file are relative to. Used for verification purposes.
-        fail_on_missing (bool): If one or more files from the dataset are not
-            present in the `image_root`, either raise an IOError (if True) or
-            remove it from the returned dataset (if False).
+            If this is `None`, no verification at all is made.
+        fail_on_missing (bool or None): If one or more files from the dataset
+            are not present in the `image_root`, either raise an IOError (if
+            True) or remove it from the returned dataset (if False).
 
     Returns:
         (pids, fids) a tuple of numpy string arrays corresponding to the PIDs,
@@ -117,23 +118,24 @@ def load_dataset(csv_file, image_root, fail_on_missing=True):
     dataset = np.genfromtxt(csv_file, delimiter=',', dtype='|U')
     pids, fids = dataset.T
 
-    # Check if all files exist
-    missing = np.full(len(fids), False, dtype=bool)
-    for i, fid in enumerate(fids):
-        missing[i] = not os.path.isfile(os.path.join(image_root, fid))
+    # Possibly check if all files exist
+    if image_root is not None:
+        missing = np.full(len(fids), False, dtype=bool)
+        for i, fid in enumerate(fids):
+            missing[i] = not os.path.isfile(os.path.join(image_root, fid))
 
-    missing_count = np.sum(missing)
-    if missing_count > 0:
-        if fail_on_missing:
-            raise IOError('Using the `{}` file and `{}` as an image root {}/'
-                          '{} images are missing'.format(
-                               csv_file, image_root, missing_count, len(fids)))
-        else:
-            print('[Warning] removing {} missing file(s) from the'
-                  ' dataset.'.format(missing_count))
-            # We simply remove the missing files.
-            fids = fids[np.logical_not(missing)]
-            pids = pids[np.logical_not(missing)]
+        missing_count = np.sum(missing)
+        if missing_count > 0:
+            if fail_on_missing:
+                raise IOError('Using the `{}` file and `{}` as an image root {}/'
+                            '{} images are missing'.format(
+                                csv_file, image_root, missing_count, len(fids)))
+            else:
+                print('[Warning] removing {} missing file(s) from the'
+                    ' dataset.'.format(missing_count))
+                # We simply remove the missing files.
+                fids = fids[np.logical_not(missing)]
+                pids = pids[np.logical_not(missing)]
 
     return pids, fids
 

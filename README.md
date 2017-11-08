@@ -169,12 +169,80 @@ TODO: Documentation. It's also pretty straightforward.
 
 ## Computing embeddings
 
-TODO: Will be added later.
+Given a trained net, one often wants to compute the embeddings of a set of pictures for further processing.
+This can be done with the `embed.py` script, which can also serve as inspiration for using a trained model in a larger program.
+
+The following invocation computes the embeddings of the Market1501 query set using some network:
+
+```
+python embed.py \
+    --experiment_root ~/experiments/my_experiment \
+    --dataset data/market1501_query.csv \
+    --filename test_embeddings.h5
+```
+
+The embeddings will be written into the HDF5 file at `~/experiments/my_experiment/test_embeddings.h5` as dataset `embs`.
+Most relevant settings are automatically loaded from the experiment's `args.json` file, but some can be overruled on the commandline.
+
+If the training was performed using data augmentation (highly recommended),
+one can invest a some more time in the embedding step in order to compute augmented embeddings,
+which are usually more robust and perform better in downstream tasks.
+
+The following is an example that computes extensively augmented embeddings:
+
+```
+python embed.py \
+    --experiment_root ~/experiments/my_experiment \
+    --dataset data/market1501_query.csv \
+    --filename test_embeddings_augmented.h5 \
+    --flip_augment \
+    --crop_augment five \
+    --aggregator mean
+```
+
+This will take 10 times longer, because we perform a total of 10 augmentations per image (2 flips times 5 crops).
+All individual embeddings will also be stored in the `.h5` file, thus the disk-space also increases.
+One question is how the embeddings of the various augmentations should be combined.
+When training using the euclidean metric in the loss, simply taking the mean is what makes most sense,
+and also what the above invocation does through `--aggregator mean`.
+But if one for example trains a normalized embedding (by using a `_normalize` head for instance),
+The embeddings *must* be re-normalized after averaging, and so one should use `--aggregator normalized_mean`.
+The final combined embedding is again stored as `embs` in the `.h5` file, as usual.
 
 # Evaluating embeddings
 
-TODO: Will be added later.
+Once the embeddings have been generated, it is a good idea to compute CMC curves and mAP for evaluation.
+With only minor modifications, the embedding `.h5` files can be used in
+[the official Market1501 MATLAB evaluation code](https://github.com/zhunzhong07/IDE-baseline-Market-1501),
+which is exactly what we did for the paper.
 
+For convenience, and to spite MATLAB, we also implemented our own evaluation code in Python.
+This code additionally depends on [scikit-learn](http://scikit-learn.org/stable/),
+and still uses TensorFlow only for re-using the same metric implementation as the training code, for consistency.
+We verified that it produces the exact same results as the reference implementation.
+
+The following is an example of evaluating a Market1501 model, notice it takes a lot of parameters :smile::
+
+```
+./evaluate.py \
+    --excluder market1501 \
+    --query_dataset data/market1501_query.csv \
+    --query_embeddings ~/experiments/my_experiment/market1501_query_embeddings.h5 \
+    --gallery_dataset data/market1501_test.csv \
+    --gallery_embeddings ~/experiments/my_experiment/market1501_test_embeddings.h5 \
+    --metric euclidean \
+    --filename ~/experiments/my_experiment/market1501_evaluation.json
+```
+
+The only thing that really needs explaining here is the `excluder`.
+For some datasets, especially multi-camera ones,
+one often excludes pictures of the query person from the gallery (for that one person)
+if it is taken from the same camera.
+This way, one gets more of a feeling for across-camera performance.
+Additionally, the Market1501 dataset contains some "junk" images in the gallery which should be ignored too.
+All this is taken care of by `excluders`.
+We provide one for the Market1501 dataset, and a `diagonal` one, which should be used where there is no such restriction,
+for example the Stanford Online Products dataset.
 
 # Independent re-implementations
 
