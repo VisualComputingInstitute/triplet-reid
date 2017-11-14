@@ -303,7 +303,7 @@ def main():
     tf.summary.histogram('embedding_pos_dists', pos_dists)
     tf.summary.histogram('embedding_neg_dists', neg_dists)
     tf.summary.histogram('embedding_lengths',
-                         tf.norm(endpoints['emb_raw'], axis=0))
+                         tf.norm(endpoints['emb_raw'], axis=1))
 
     # Create the mem-mapped arrays in which we'll log all training detail in
     # addition to tensorboard, because tensorboard is annoying for detailed
