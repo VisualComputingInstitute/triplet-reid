@@ -125,6 +125,14 @@ For most common models, you can download the [checkpoints provided by Google her
 For example, that's where we get our ResNet50 pre-trained weights from,
 and what you should pass as second parameter to `market1501_train.sh`.
 
+### Example training log
+
+This is what a healthy training on Market1501 looks like, using the provided script:
+
+![Screenshot of tensorboard of a healthy Market1501 run](healthy-market-run.png)
+
+The `Histograms` tab in tensorboard also shows some interesting logs.
+
 ## Interrupting and resuming training
 
 Since training can take quite a while, interrupting and resuming training is important.
