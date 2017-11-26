@@ -44,9 +44,9 @@ def cdist(a, b, metric='euclidean'):
     """
     with tf.name_scope("cdist"):
         diffs = all_diffs(a, b)
-        if metric == 'euclidean':
+        if metric == 'sqeuclidean':
             return tf.reduce_sum(tf.square(diffs), axis=-1)
-        elif metric == 'sqeuclidean':
+        elif metric == 'euclidean':
             return tf.sqrt(tf.reduce_sum(tf.square(diffs), axis=-1) + 1e-12)
         elif metric == 'cityblock':
             return tf.reduce_sum(tf.abs(diffs), axis=-1)
@@ -82,10 +82,10 @@ def batch_hard(dists, pids, margin, batch_precision_at_k=None):
     """
     with tf.name_scope("batch_hard"):
         same_identity_mask = tf.equal(tf.expand_dims(pids, axis=1),
-                                    tf.expand_dims(pids, axis=0))
+                                      tf.expand_dims(pids, axis=0))
         negative_mask = tf.logical_not(same_identity_mask)
         positive_mask = tf.logical_xor(same_identity_mask,
-                                    tf.eye(tf.shape(pids)[0], dtype=tf.bool))
+                                       tf.eye(tf.shape(pids)[0], dtype=tf.bool))
 
         furthest_positive = tf.reduce_max(dists*tf.cast(positive_mask, tf.float32), axis=1)
         closest_negative = tf.map_fn(lambda x: tf.reduce_min(tf.boolean_mask(x[0], x[1])),
