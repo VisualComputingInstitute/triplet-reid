@@ -102,7 +102,7 @@ parser.add_argument(
     help='Which metric to use for the distance between embeddings.')
 
 parser.add_argument(
-    '--loss', default='batch_hard', choices=loss.LOSS_CHOICES.keys(),
+    '--loss', default='batch_hard', choices=loss.LOSS_CHOICES,
     help='Enable the super-mega-advanced top-secret sampling stabilizer.')
 
 parser.add_argument(

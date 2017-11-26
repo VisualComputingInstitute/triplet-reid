@@ -66,6 +66,18 @@ def get_at_indices(tensor, indices):
     return tf.gather_nd(tensor, tf.stack((counter, indices), -1))
 
 
+def apply_margin(x, margin):
+    if isinstance(margin, numbers.Real):
+        return tf.maximum(x + margin, 0.0)
+    elif margin == 'soft':
+        return tf.nn.softplus(x)
+    elif margin.lower() == 'none':
+        return x
+    else:
+        raise NotImplementedError(
+            'The margin {} is not implemented in batch_hard'.format(margin))
+
+
 def batch_hard(dists, pids, margin, batch_precision_at_k=None):
     """Computes the batch-hard loss from arxiv.org/abs/1703.07737.
 
@@ -93,19 +105,55 @@ def batch_hard(dists, pids, margin, batch_precision_at_k=None):
         # Another way of achieving the same, though more hacky:
         # closest_negative = tf.reduce_min(dists + 1e5*tf.cast(same_identity_mask, tf.float32), axis=1)
 
-        diff = furthest_positive - closest_negative
-        if isinstance(margin, numbers.Real):
-            diff = tf.maximum(diff + margin, 0.0)
-        elif margin == 'soft':
-            diff = tf.nn.softplus(diff)
-        elif margin.lower() == 'none':
-            pass
-        else:
-            raise NotImplementedError(
-                'The margin {} is not implemented in batch_hard'.format(margin))
+        losses = apply_margin(furthest_positive - closest_negative, margin)
 
+    return return_with_extra_stats(losses, dists, batch_precision_at_k,
+                                   same_identity_mask,
+                                   positive_mask, negative_mask)
+
+
+def batch_all(dists, pids, margin, batch_precision_at_k=None):
+    with tf.name_scope("batch_all"):
+        same_identity_mask = tf.equal(tf.expand_dims(pids, axis=1),
+                                      tf.expand_dims(pids, axis=0))
+        negative_mask = tf.logical_not(same_identity_mask)
+        positive_mask = tf.logical_xor(same_identity_mask,
+                                       tf.eye(tf.shape(pids)[0], dtype=tf.bool))
+
+        # Unfortunately, foldl can only go over one tensor, unlike map_fn,
+        # so we need to convert and stack around.
+        packed = tf.stack([dists,
+                           tf.cast(positive_mask, tf.float32),
+                           tf.cast(negative_mask, tf.float32)], axis=1)
+
+        def per_anchor(accum, row):
+            # `dists_` is a 1D array of distance (row of `dists`)
+            # `poss_` is a 1D bool array marking positives.
+            # `negs_` is a 1D bool array marking negatives.
+            dists_, poss_, negs_ = row[0], row[1], row[2]
+
+            # Now construct a (P,N)-matrix of all-to-all (anchor-pos - anchor-neg).
+            diff = all_diffs(tf.boolean_mask(dists_, tf.cast(poss_, tf.bool)),
+                             tf.boolean_mask(dists_, tf.cast(negs_, tf.bool)))
+
+            losses = tf.reshape(apply_margin(diff, margin), [-1])
+            return tf.concat([accum, losses], axis=0)
+
+        # Some very advanced trickery in order to get the initialization tensor
+        # to be an empty 1D tensor with a dynamic shape, such that it is
+        # allowed to grow during the iteration.
+        init = tf.placeholder_with_default([], shape=[None])
+        losses = tf.foldl(per_anchor, packed, init)
+
+    return return_with_extra_stats(losses, dists, batch_precision_at_k,
+                                   same_identity_mask,
+                                   positive_mask, negative_mask)
+
+
+def return_with_extra_stats(to_return, dists, batch_precision_at_k,
+                            same_identity_mask, positive_mask, negative_mask):
     if batch_precision_at_k is None:
-        return diff
+        return to_return
 
     # For monitoring, compute the within-batch top-1 accuracy and the
     # within-batch precision-at-k, which is somewhat more expressive.
@@ -142,9 +190,11 @@ def batch_hard(dists, pids, margin, batch_precision_at_k=None):
         negative_dists = tf.boolean_mask(dists, negative_mask)
         positive_dists = tf.boolean_mask(dists, positive_mask)
 
-        return diff, top1, prec_at_k, topk_is_same, negative_dists, positive_dists
+        return to_return, top1, prec_at_k, topk_is_same, negative_dists, positive_dists
+
 
 
 LOSS_CHOICES = {
     'batch_hard': batch_hard,
+    'batch_all': batch_all,
 }
