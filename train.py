@@ -106,6 +106,10 @@ parser.add_argument(
     help='Enable the super-mega-advanced top-secret sampling stabilizer.')
 
 parser.add_argument(
+    '--loss_ignore_zero', default=False, const=True, nargs='?', type=common.positive_float,
+    help='Average only over non-zero loss values, called "=/=0" in the paper.')
+
+parser.add_argument(
     '--learning_rate', default=3e-4, type=common.positive_float,
     help='The initial value of the learning-rate, before it kicks in.')
 
@@ -299,16 +303,24 @@ def main():
     losses, train_top1, prec_at_k, _, neg_dists, pos_dists = loss.LOSS_CHOICES[args.loss](
         dists, pids, args.margin, batch_precision_at_k=args.batch_k-1)
 
-    # Count the number of active entries, and compute the total batch loss.
-    num_active = tf.reduce_sum(tf.cast(tf.greater(losses, 1e-5), tf.float32))
-    loss_mean = tf.reduce_mean(losses)
+    # Count how many entries in the batch are (possibly approximately) non-zero.
+    if args.loss_ignore_zero is True:
+        nnz = tf.count_nonzero(losses, dtype=tf.float32)
+    else:
+        nnz = tf.reduce_sum(tf.to_float(tf.greater(losses, args.loss_ignore_zero or 1e-5)))
+
+    # Compute the total batch-loss by either averaging all, or averaging non-zeros only.
+    if args.loss_ignore_zero is False:
+        loss_mean = tf.reduce_mean(losses)
+    else:
+        loss_mean = tf.reduce_sum(losses) / (1e-33 + nnz)
 
     # Some logging for tensorboard.
     tf.summary.histogram('loss_distribution', losses)
     tf.summary.scalar('loss', loss_mean)
     tf.summary.scalar('batch_top1', train_top1)
     tf.summary.scalar('batch_prec_at_{}'.format(args.batch_k-1), prec_at_k)
-    tf.summary.scalar('active_count', num_active)
+    tf.summary.scalar('active_count', nnz)
     tf.summary.histogram('embedding_dists', dists)
     tf.summary.histogram('embedding_pos_dists', pos_dists)
     tf.summary.histogram('embedding_neg_dists', neg_dists)
