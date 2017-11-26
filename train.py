@@ -141,6 +141,11 @@ parser.add_argument(
          ' embeddings, losses and FIDs seen in each batch during training.'
          ' Everything can be re-constructed and analyzed that way.')
 
+parser.add_argument(
+    '--optim', default='AdamOptimizer(learning_rate)',
+    help='Which optimizer to use. This is actual TensorFlow code that will be'
+         ' eval\'d. Use `learning_rate` for the learning-rate with schedule.')
+
 
 def sample_k_fids_for_pid(pid, all_fids, all_pids, batch_k):
     """ Given a PID, select K FIDs of that specific PID. """
@@ -341,9 +346,7 @@ def main():
     else:
         learning_rate = args.learning_rate
     tf.summary.scalar('learning_rate', learning_rate)
-    optimizer = tf.train.AdamOptimizer(learning_rate)
-    # Feel free to try others!
-    # optimizer = tf.train.AdadeltaOptimizer(learning_rate)
+    optimizer = eval("tf.train." + args.optim)
 
     # Update_ops are used to update batchnorm stats.
     with tf.control_dependencies(tf.get_collection(tf.GraphKeys.UPDATE_OPS)):
