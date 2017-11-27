@@ -2,6 +2,7 @@
 from argparse import ArgumentParser
 from datetime import timedelta
 from importlib import import_module
+import logging.config
 import os
 from signal import SIGINT, SIGTERM
 import sys
@@ -195,9 +196,9 @@ def main():
         # If the experiment directory exists already, we bail in fear.
         if os.path.exists(args.experiment_root):
             if os.listdir(args.experiment_root):
-                print('The directory {} already exists and is not empty. If '
-                      'you want to resume training, append --resume to your '
-                      'call.'.format(args.experiment_root))
+                print('The directory {} already exists and is not empty.'
+                      ' If you want to resume training, append --resume to'
+                      ' your call.'.format(args.experiment_root))
                 exit(1)
         else:
             os.makedirs(args.experiment_root)
@@ -207,19 +208,23 @@ def main():
         with open(args_file, 'w') as f:
             json.dump(vars(args), f, ensure_ascii=False, indent=2, sort_keys=True)
 
+    log_file = os.path.join(args.experiment_root, "train")
+    logging.config.dictConfig(common.get_logging_dict(log_file))
+    log = logging.getLogger('train')
+
     # Also show all parameter values at the start, for ease of reading logs.
-    print('Training using the following parameters:')
+    log.info('Training using the following parameters:')
     for key, value in sorted(vars(args).items()):
-        print('{}: {}'.format(key, value))
+        log.info('{}: {}'.format(key, value))
 
     # Check them here, so they are not required when --resume-ing.
     if not args.train_set:
         parser.print_help()
-        print("You did not specify the `train_set` argument!")
+        log.error("You did not specify the `train_set` argument!")
         sys.exit(1)
     if not args.image_root:
         parser.print_help()
-        print("You did not specify the required `image_root` argument!")
+        log.error("You did not specify the required `image_root` argument!")
         sys.exit(1)
 
     # Load the data from the CSV file.
@@ -351,7 +356,7 @@ def main():
         if args.resume:
             # In case we're resuming, simply load the full checkpoint to init.
             last_checkpoint = tf.train.latest_checkpoint(args.experiment_root)
-            print('Restoring from checkpoint: {}'.format(last_checkpoint))
+            log.info('Restoring from checkpoint: {}'.format(last_checkpoint))
             checkpoint_saver.restore(sess, last_checkpoint)
         else:
             # But if we're starting from scratch, we may need to load some
@@ -370,7 +375,7 @@ def main():
         summary_writer = tf.summary.FileWriter(args.experiment_root, sess.graph)
 
         start_step = sess.run(global_step)
-        print('Starting training from iteration {}.'.format(start_step))
+        log.info('Starting training from iteration {}.'.format(start_step))
 
         # Finally, here comes the main-loop. This `Uninterrupt` is a handy
         # utility such that an iteration still finishes on Ctrl+C and we can
@@ -397,13 +402,17 @@ def main():
 
                 # Do a huge print out of the current progress.
                 seconds_todo = (args.train_iterations - step) * elapsed_time
-                print('iter:{:6d}, loss min|avg|max: {:.3f}|{:.3f}|{:6.3f}, '
-                      'batch-p@{}: {:.2%}, ETA: {} ({:.2f}s/it)'.format(
-                          step, float(np.min(b_loss)), float(np.mean(b_loss)),
-                          float(np.max(b_loss)),
-                          args.batch_k-1, float(b_prec_at_k),
-                          timedelta(seconds=int(seconds_todo)), elapsed_time),
-                      flush=True)
+                log.info('iter:{:6d}, loss min|avg|max: {:.3f}|{:.3f}|{:6.3f}, '
+                         'batch-p@{}: {:.2%}, ETA: {} ({:.2f}s/it)'.format(
+                             step,
+                             float(np.min(b_loss)),
+                             float(np.mean(b_loss)),
+                             float(np.max(b_loss)),
+                             args.batch_k-1, float(b_prec_at_k),
+                             timedelta(seconds=int(seconds_todo)),
+                             elapsed_time))
+                sys.stdout.flush()
+                sys.stderr.flush()
 
                 # Save a checkpoint of training every so often.
                 if (args.checkpoint_frequency > 0 and
@@ -413,7 +422,7 @@ def main():
 
                 # Stop the main-loop at the end of the step, if requested.
                 if u.interrupted:
-                    print("Interrupted on request!")
+                    log.info("Interrupted on request!")
                     break
 
         # Store one final checkpoint. This might be redundant, but it is crucial
