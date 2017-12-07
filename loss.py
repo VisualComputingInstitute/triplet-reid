@@ -78,7 +78,7 @@ def apply_margin(x, margin):
             'The margin {} is not implemented in batch_hard'.format(margin))
 
 
-def batch_hard(dists, pids, margin, batch_precision_at_k=None):
+def _generic_batchloss(dists, pids, margin, batch_precision_at_k=None, variant='hard'):
     """Computes the batch-hard loss from arxiv.org/abs/1703.07737.
 
     Args:
@@ -99,21 +99,43 @@ def batch_hard(dists, pids, margin, batch_precision_at_k=None):
         positive_mask = tf.logical_xor(same_identity_mask,
                                        tf.eye(tf.shape(pids)[0], dtype=tf.bool))
 
-        furthest_positive = tf.reduce_max(dists*tf.cast(positive_mask, tf.float32), axis=1)
-        closest_negative = tf.map_fn(lambda x: tf.reduce_min(tf.boolean_mask(x[0], x[1])),
-                                    (dists, negative_mask), tf.float32)
-        # Another way of achieving the same, though more hacky:
-        # closest_negative = tf.reduce_min(dists + 1e5*tf.cast(same_identity_mask, tf.float32), axis=1)
+        if variant == 'sample':
+            # -inf gives that index a probability of zero.
+            neg_infs = -tf.constant(float('inf'))*tf.ones_like(dists)
+            # higher logits are more likely to be sampled.
+            pos_logits = tf.where(positive_mask, dists, neg_infs)
+            pos_indices = tf.multinomial(pos_logits, num_samples=1)[:,0]
+            positive = get_at_indices(dists, pos_indices)
 
-        losses = apply_margin(furthest_positive - closest_negative, margin)
+            # Same for the negatives, but we need to turn the logits around,
+            # since we want to sample the smaller distances more likely.
+            neg_logits = tf.where(negative_mask, -dists, neg_infs)
+            neg_indices = tf.multinomial(neg_logits, num_samples=1)[:,0]
+            negative = get_at_indices(dists, neg_indices)
+        elif variant == 'hard':
+            # Furthest one is worst positive.
+            positive = tf.reduce_max(dists*tf.cast(positive_mask, tf.float32), axis=1)
+            # Closest one is worst negative.
+            negative = tf.map_fn(lambda x: tf.reduce_min(tf.boolean_mask(x[0], x[1])),
+                                 (dists, negative_mask), tf.float32)
+            # negative = tf.reduce_min(dists + 1e5*tf.cast(same_identity_mask, tf.float32), axis=1)
+
+        losses = apply_margin(positive - negative, margin)
 
     return return_with_extra_stats(losses, dists, batch_precision_at_k,
                                    same_identity_mask,
                                    positive_mask, negative_mask)
 
+def batch_hard(dists, pids, margin, batch_precision_at_k=None):
+    return _generic_batchloss(dists, pids, margin, batch_precision_at_k, variant='hard')
+
+
+def batch_sample(dists, pids, margin, batch_precision_at_k=None):
+    return _generic_batchloss(dists, pids, margin, batch_precision_at_k, variant='sample')
+
 
 def batch_all(dists, pids, margin, batch_precision_at_k=None):
-    with tf.name_scope("batch_all"):
+    with tf.name_scope("batch_hard"):
         same_identity_mask = tf.equal(tf.expand_dims(pids, axis=1),
                                       tf.expand_dims(pids, axis=0))
         negative_mask = tf.logical_not(same_identity_mask)
@@ -196,5 +218,6 @@ def return_with_extra_stats(to_return, dists, batch_precision_at_k,
 
 LOSS_CHOICES = {
     'batch_hard': batch_hard,
+    'batch_sample': batch_sample,
     'batch_all': batch_all,
 }
