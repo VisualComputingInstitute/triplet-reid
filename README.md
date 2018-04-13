@@ -22,7 +22,12 @@ If you use any of the provided code, please cite:
 ```
 
 
-# Pretrained models
+# Pretrained TensorFlow models
+
+For convenience, we provide the pretrained weights for our TriNet TensorFlow model, trained on Market-1501 using the code from this repository and the settings form our paper. The TensorFlow checkpoint can be downloaded in the [release section](https://github.com/VisualComputingInstitute/triplet-reid/releases/tag/250eb1).
+
+
+# Pretrained Theano models
 
 We provide the exact TriNet model used in the paper, which was implemented in
 [Theano](http://deeplearning.net/software/theano/install.html)
