@@ -259,9 +259,20 @@ All this is taken care of by `excluders`.
 We provide one for the Market1501 dataset, and a `diagonal` one, which should be used where there is no such restriction,
 for example the Stanford Online Products dataset.
 
+# :exclamation: Important evaluation NOTE :exclamation:
+
+The implementation of `mAP` computation has [changed from sklearn v0.18 to v0.19](http://scikit-learn.org/stable/whats_new.html#version-0-19).
+The implementation in v0.18 and earlier is exactly the same as in the official Market1501 MATLAB evaluation code, but is [wrong](https://github.com/scikit-learn/scikit-learn/pull/7356).
+The implementation in v0.19 and later leads to a roughly one percentage point increase in `mAP` score.
+It is not correct to compare values across versions, and again, all values in our paper were computed by the official Market1501 MATLAB code.
+The evaluation code in this repository simply uses the scikit-learn code, and thus **the score depends on which version of scikit-learn you are using**.
+Unfortunately, almost no paper mentions which code-base they used and how they computed `mAP` scores, so comparison is difficult.
+Other frameworks have [the same problem](https://github.com/Cysu/open-reid/issues/50), but we expect many not to be aware of this.
+
 # Independent re-implementations
 
 These are the independent re-implementations of our paper that we are aware of,
 please send a pull-request to add more:
 
 - [Open-ReID](https://github.com/Cysu/open-reid) (PyTorch, MIT license)
+- https://github.com/huanghoujing/person-reid-triplet-loss-baseline (PyTorch, no license)
