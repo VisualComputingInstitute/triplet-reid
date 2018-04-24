@@ -151,7 +151,7 @@ def sample_k_fids_for_pid(pid, all_fids, all_pids, batch_k):
     # create a padded list of indices which contain a multiple of the
     # original FID count such that all of them will be sampled equally likely.
     count = tf.shape(possible_fids)[0]
-    padded_count = tf.cast(tf.ceil(batch_k / tf.cast(count, tf.float64)), tf.int32) * count
+    padded_count = tf.cast(tf.ceil(batch_k / tf.cast(count, tf.float32)), tf.int32) * count
     full_range = tf.mod(tf.range(padded_count), count)
 
     # Sampling is always performed by shuffling and taking the first k.
