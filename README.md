@@ -1,6 +1,6 @@
 # Triplet-based Person Re-Identification
 
-Code for reproducing the results of our "In Defense of the Triplet Loss for Person Re-Identification" paper.
+Code for reproducing the results of our [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/abs/1703.07737) paper.
 
 We provide the following things:
 - The exact pre-trained weights for the TriNet model as used in the paper, including some rudimentary example code for using it to compute embeddings.
