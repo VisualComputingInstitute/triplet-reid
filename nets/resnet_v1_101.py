@@ -14,6 +14,6 @@ def endpoints(image, is_training):
         _, endpoints = resnet_v1_101(image, num_classes=None, is_training=is_training, global_pool=True)
 
     endpoints['model_output'] = endpoints['global_pool'] = tf.reduce_mean(
-        endpoints['resnet_v1_101/block4'], [1, 2], name='pool5', keep_dims=False)
+        endpoints['resnet_v1_101/block4'], [1, 2], name='pool5')
 
     return endpoints, 'resnet_v1_101'
