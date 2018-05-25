@@ -75,7 +75,7 @@ parser.add_argument(
 def flip_augment(image, fid, pid):
     """ Returns both the original and the horizontal flip of an image. """
     images = tf.stack([image, tf.reverse(image, [1])])
-    return images, [fid]*2, [pid]*2
+    return images, tf.stack([fid]*2), tf.stack([pid]*2)
 
 
 def five_crops(image, crop_size):
@@ -155,7 +155,7 @@ def main():
     # Convert filenames to actual image tensors.
     dataset = dataset.map(
         lambda fid: common.fid_to_image(
-            fid, 'dummy', image_root=args.image_root,
+            fid, tf.constant('dummy'), image_root=args.image_root,
             image_size=pre_crop_size if args.crop_augment else net_input_size),
         num_parallel_calls=args.loading_threads)
 
@@ -173,8 +173,10 @@ def main():
             (five_crops(im, net_input_size)[0], fid, pid))
         modifiers = [o + '_center' for o in modifiers]
     elif args.crop_augment == 'five':
-        dataset = dataset.map(lambda im, fid, pid:
-            (tf.stack(five_crops(im, net_input_size)), [fid]*5, [pid]*5))
+        dataset = dataset.map(lambda im, fid, pid: (
+            tf.stack(five_crops(im, net_input_size)),
+            tf.stack([fid]*5),
+            tf.stack([pid]*5)))
         dataset = dataset.apply(tf.contrib.data.unbatch())
         modifiers = [o + m for o in modifiers for m in [
             '_center', '_top_left', '_top_right', '_bottom_left', '_bottom_right']]
