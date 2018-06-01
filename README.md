@@ -81,7 +81,11 @@ achieving about the same performance.
 - **This repository requires at least version 1.4 of TensorFlow.**
 - **The TensorFlow code is Python 3 only and won't work in Python 2!**
 
-:boom: :fire: :exclamation: **If you train on a very different dataset, don't forget to tune the learning-rate** :exclamation: :fire: :boom:
+:boom: :fire: :exclamation: **If you train on a very different dataset, don't forget to tune the learning-rate and schedule** :exclamation: :fire: :boom:
+
+If the dataset is much larger, or much smaller, you might need to train much longer or much shorter.
+Market1501, MARS (in tracklets) and DukeMTMC are all roughly similar in size, hence the same schedule works well for all.
+CARS196, for example, is much smaller and thus needs a much shorter schedule.
 
 ## Defining a dataset
 
