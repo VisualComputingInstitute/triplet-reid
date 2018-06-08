@@ -37,7 +37,7 @@ parser.add_argument(
 
 parser.add_argument(
     '--gallery_embeddings', required=True,
-    help='Path to the h5 file containing the query embeddings.')
+    help='Path to the h5 file containing the gallery embeddings.')
 
 parser.add_argument(
     '--metric', required=True, choices=loss.cdist.supported_metrics,
