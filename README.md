@@ -273,6 +273,9 @@ The evaluation code in this repository simply uses the scikit-learn code, and th
 Unfortunately, almost no paper mentions which code-base they used and how they computed `mAP` scores, so comparison is difficult.
 Other frameworks have [the same problem](https://github.com/Cysu/open-reid/issues/50), but we expect many not to be aware of this.
 
+To make the evaluating code independent of the sklearn version we have implemented our own version of the average precision computation.
+This now follows the official Market1501 code and results in values directly comparable.
+
 # Independent re-implementations
 
 These are the independent re-implementations of our paper that we are aware of,
