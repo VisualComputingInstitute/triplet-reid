@@ -280,3 +280,8 @@ please send a pull-request to add more:
 
 - [Open-ReID](https://github.com/Cysu/open-reid) (PyTorch, MIT license)
 - https://github.com/huanghoujing/person-reid-triplet-loss-baseline (PyTorch, no license)
+
+Not technically independent re-implementation, but open-sourced works which use this code in some way that we are aware of, and again pull-requests to add more are welcome:
+
+- https://github.com/VisualComputingInstitute/towards-reid-tracking is our own work exploring the integration of ReID and tracking (Code for the paper [Towards a Principled Integration of Multi-Camera Re-Identification and Tracking through Optimal Bayes Filters](https://arxiv.org/abs/1705.04608))
+- https://github.com/cftang0827/human_recognition is a simple wrapper, combining this with an OpenCV detector. See also [#47](https://github.com/VisualComputingInstitute/triplet-reid/issues/47)
