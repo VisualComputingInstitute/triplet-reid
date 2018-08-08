@@ -197,7 +197,7 @@ The following invocation computes the embeddings of the Market1501 query set usi
 python embed.py \
     --experiment_root ~/experiments/my_experiment \
     --dataset data/market1501_query.csv \
-    --filename test_embeddings.h5
+    --filename market1501_query_embeddings.h5
 ```
 
 The embeddings will be written into the HDF5 file at `~/experiments/my_experiment/test_embeddings.h5` as dataset `embs`.
@@ -213,7 +213,7 @@ The following is an example that computes extensively augmented embeddings:
 python embed.py \
     --experiment_root ~/experiments/my_experiment \
     --dataset data/market1501_query.csv \
-    --filename test_embeddings_augmented.h5 \
+    --filename market1501_query_embeddings_augmented.h5 \
     --flip_augment \
     --crop_augment five \
     --aggregator mean
