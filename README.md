@@ -280,6 +280,7 @@ please send a pull-request to add more:
 
 - [Open-ReID](https://github.com/Cysu/open-reid) (PyTorch, MIT license)
 - https://github.com/huanghoujing/person-reid-triplet-loss-baseline (PyTorch, no license)
+- https://github.com/CoinCheung/triplet-reid-pytorch (PyTorch, Apache 2.0 license)
 
 Not technically independent re-implementation, but open-sourced works which use this code in some way that we are aware of, and again pull-requests to add more are welcome:
 
