@@ -7,6 +7,7 @@ import os
 import h5py
 import json
 import numpy as np
+from sklearn.metrics import average_precision_score
 import tensorflow as tf
 
 import common
@@ -50,8 +51,15 @@ parser.add_argument(
     '--batch_size', default=256, type=common.positive_int,
     help='Batch size used during evaluation, adapt based on your memory usage.')
 
+parser.add_argument(
+    '--use_market_ap', action='store_true', default=False,
+    help='When this flag is provided, the average precision is computed exactly'
+         ' as done by the Market-1501 evaluation script, rather than the '
+         'default scikit-learn implementation that gives slightly different'
+         'scores.')
 
-def average_precision_score(y_true, y_score):
+
+def average_precision_score_market(y_true, y_score):
     """ Compute average precision (AP) from prediction scores.
 
     This is a replacement for the scikit-learn version which, while likely more
@@ -75,6 +83,8 @@ def average_precision_score(y_true, y_score):
                          'got lengths y_true:{} and y_score:{}'.format(
                             len(y_true), len(y_score)))
 
+    # Mergesort is used since it is a stable sorting algorithm. This is
+    # important to compute consistent and correct scores.
     y_true_sorted = y_true[np.argsort(-y_score, kind='mergesort')]
 
     tp = np.cumsum(y_true_sorted)
@@ -119,6 +129,12 @@ def main():
 
     batch_distances = loss.cdist(batch_embs, gallery_embs, metric=args.metric)
 
+    # Check if we should use Market-1501 specific average precision computation.
+    if args.use_market_ap:
+        average_precision = average_precision_score_market
+    else:
+        average_precision = average_precision_score
+
     # Loop over the query embeddings and compute their APs and the CMC curve.
     aps = []
     cmc = np.zeros(len(gallery_pids), dtype=np.int32)
@@ -153,7 +169,7 @@ def main():
             # it won't change anything.
             scores = 1 / (1 + distances)
             for i in range(len(distances)):
-                ap = average_precision_score(pid_matches[i], scores[i])
+                ap = average_precision(pid_matches[i], scores[i])
 
                 if np.isnan(ap):
                     print()
