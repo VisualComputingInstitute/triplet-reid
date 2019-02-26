@@ -17,7 +17,7 @@ import loss
 parser = ArgumentParser(description='Evaluate a ReID embedding.')
 
 parser.add_argument(
-    '--excluder', required=True, choices=('market1501', 'diagonal'),
+    '--excluder', required=True, choices=('market1501', 'diagonal','duke'),
     help='Excluder function to mask certain matches. Especially for multi-'
          'camera datasets, one often excludes pictures of the query person from'
          ' the gallery if it is taken from the same camera. The `diagonal`'
