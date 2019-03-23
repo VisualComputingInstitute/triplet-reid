@@ -273,6 +273,9 @@ The evaluation code in this repository simply uses the scikit-learn code, and th
 Unfortunately, almost no paper mentions which code-base they used and how they computed `mAP` scores, so comparison is difficult.
 Other frameworks have [the same problem](https://github.com/Cysu/open-reid/issues/50), but we expect many not to be aware of this.
 
+We provide evaluation code that computes the mAP as done by the Market-1501 MATLAB evaluation script, independent of the scikit-learn version.
+This can be used by providing the `--use_market_ap` flag when running `evaluate.py`.
+
 # Independent re-implementations
 
 These are the independent re-implementations of our paper that we are aware of,
